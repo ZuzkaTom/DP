@@ -7,12 +7,12 @@ from matplotlib.widgets import Button
 from tqdm import tqdm  
 from scipy.signal import filtfilt 
 
-# Nacitanie suboru
-test_signal, sr = librosa.load("trubka.wav", sr=20000)
+# Nacitanie suboru v pripade trubky a tibetskej spievajucej misky
+#test_signal, sr = librosa.load("trubka.wav", sr=20000)
 #test_signal, sr = librosa.load("bowls.wav", sr=20000)
 
 # Orezanie signalu na 1 sekundu
-test_signal = test_signal[:sr]
+#test_signal = test_signal[:sr]
 
 # Parametre signalu
 sr = 20000  # vzorkovacia frekvencia (20 kHz)
@@ -23,7 +23,8 @@ t = np.arange(0, duration, dt)
 
 # Generovanie umeleho signalu    
 freq = 200
-#test_signal = np.sin(2 * np.pi * freq * t) + np.sin(2 * np.pi * 2 * freq * t) + np.sin(2 * np.pi * 3 * freq * t)
+test_signal = np.sin(2 * np.pi * freq * t) + np.sin(2 * np.pi * 2 * freq * t) + np.sin(2 * np.pi * 3 * freq * t)
+# Generovanie signalu, pripad chybajucej fundamentalnej frekvencie
 #test_signal = np.sin(2 * np.pi * 600 * t) + np.sin(2 * np.pi * 1500 * t)+np.sin(2 * np.pi * 2400 * t)
 
 
@@ -101,8 +102,8 @@ B = 300  # Konstanta pre permeabilitu
 g = 2000  # Konstanta pre permeabilitu
 y = 5.05  # Rychlost doplnania neurotransmitera
 L = 2500  # Rychlost strat zo synaptickej strbiny
-r = 6580  # Rychlost navratu neurotransmitera do recyklacneho zasobneho priestoru
-x = 66.31  # Rychlost uvolnenia neurotransmitera z recyklacneho zasobneho priestoru
+r = 6580  # Rychlost navratu neurotransmitera do recyklacneho zasobnika
+x = 66.31  # Rychlost uvolnenia neurotransmitera z recyklacneho zasobnika
 h = 50000  # Konstanta pre pravdepodobnost spiku
 
 # Parametre pre vypocet amplitudy stimulu
@@ -110,7 +111,7 @@ dB = 80  # Decibelova uroven signalu
 amp = 10 ** (dB / 20 - 1.35)  # Amplituda signalu
 endsilence = 0.01  # Trvanie pociatocneho ticha v sekundach
 
-#Vahova funkcia pre refraktalne efekty
+#Vahova funkcia pre refrakterne efekty
 def W_function(t):
     return np.where((t > 0) & (t < 0.001), 1.0, 0.0)
 
@@ -118,7 +119,7 @@ def W_function(t):
 kt_spontaneous = (g * A) / (A + B)  # Permeabilita pri spontannej aktivite
 c_spontaneous = (M * y * kt_spontaneous) / (L * kt_spontaneous + y * (L + r))  # Mnozstvo neurotransmitera v synaptickej strbine
 q_spontaneous = (c_spontaneous * (L + r)) / kt_spontaneous  # Mnozstvo volneho neurotransmitera
-w_spontaneous = (c_spontaneous * r) / x  # Mnozstvo neurotransmitera v recyklacnom zasobnom priestore
+w_spontaneous = (c_spontaneous * r) / x  # Mnozstvo neurotransmitera v recyklacnom zasobniku
  
 # Pole na okladanie vysledkov
 kt_values = []
@@ -131,7 +132,7 @@ for sig_idx, sig in enumerate(tqdm(gammatone_signals, desc="Mechanicko-nervova t
     spike_history = np.zeros_like(t)
     q = q_spontaneous  # Pociatocne mnozstvo volneho neurotransmitera
     c = c_spontaneous  # Pociatocne mnozstvo neurotransmitera v synaptickej strbine
-    w = w_spontaneous  # Pociatocne mnozstvo neurotransmitera v recyklacnom zasobnom priestore
+    w = w_spontaneous  # Pociatocne mnozstvo neurotransmitera v recyklacnom zasobniku
     
     # Pole na ukladanie vysledkov pre kazdy kanal
     kt_values_channel = []
@@ -164,7 +165,7 @@ for sig_idx, sig in enumerate(tqdm(gammatone_signals, desc="Mechanicko-nervova t
         eject = kt * q  # Uvolnenie neurotransmitera do synaptickej strbiny
         loss = L * dt * c  # Strata neurotransmitera zo synaptickej strbiny
         reuptake = r * dt * c  # Navrat neurotransmitera do recyklacneho priestoru
-        reprocess = x * dt * w  # Presun neurotransmitera z recyklacneho priestoru do zasobneho priestoru
+        reprocess = x * dt * w  # Presun neurotransmitera z recyklacneho priestoru do zasobnika
 
         # Aktualizacia 
         q = q + replenish - eject + reprocess
@@ -174,14 +175,14 @@ for sig_idx, sig in enumerate(tqdm(gammatone_signals, desc="Mechanicko-nervova t
         # Vypocet pravdepodobnosti spiku 
         p_spike = h * c * dt  
         
-        # Výpočet vplyvu predchádzajúcich spikov pomocou váhovej funkcie
+        # Výpočet vplyvu predchadzajucich spikov pomocou vahovej funkcie
         ref_effect = np.sum(spike_history[:i] * W_function(t_sim - t[:i]))
         ref_effect = np.clip(ref_effect, 0, 1)
 
-        # Úprava pravdepodobnosti spiku na základe refraktérneho efektu
+        # Úprava pravdepodobnosti spiku na zaklade refrakterneho efektu
         p_spike_adjusted = p_spike * (1 - ref_effect)
 
-        # Rozhodnutie o spiku na základe upravenej pravdepodobnosti
+        # Rozhodnutie o spiku na zaklade upravenej pravdepodobnosti
         if np.random.random() < p_spike_adjusted:
             spike_history[i] = 1
 
@@ -198,7 +199,7 @@ for sig_idx, sig in enumerate(tqdm(gammatone_signals, desc="Mechanicko-nervova t
     p_spike_values.append(p_spike_values_channel)
 
 # Vypocet autokorelacnych histogramov
-# Casova konstanta pouzita vo vahovacej funkcii e^(-T/τ)
+# Casova konstanta pouzita vo vahovacej funkcii e^(-T/tau)
 time_constant = 0.0025  
 
 # Dlzka, pocas ktorej sa beru do uvahy predchadzajuce spiky
@@ -245,7 +246,7 @@ for k, p_t in enumerate(tqdm(p_spike_values, desc="Distribucia casovych interval
                 pit_T_dt = p_t[t_minus_T_minus_delta[valid]]  # p(t−T−δt)
 
                 # Vypocitame vahu podla vzdialenosti T – Lickliderov exponencialny utlm
-                weights = np.exp(-T * dt / time_constant)  # e^(−T/τ)
+                weights = np.exp(-T * dt / time_constant)  # e^(−T/tau)
 
                 # Vypocitame prispevok do histogramu pre dany δt:
                 histogram[i] += np.sum(pit_T * pit_T_dt * weights)
@@ -258,7 +259,7 @@ time_intervals = delta_t_values
 sacf = np.mean(histograms, axis=0)
 print("Scitanie napriec kanalmi : SACF")
 
-# casove hranice pre vypocet fundamentalnej frekvencie
+# Casove hranice pre vypocet fundamentalnej frekvencie
 min_lag = 0.001      # 1 ms = 1000 Hz
 max_lag = 0.0125     # 12.5 ms = 80 Hz
 
@@ -275,7 +276,6 @@ f0_estimated = 1 / dominant_delta
 print(f"Extrakcia vysky tonu : odhadnuta fundamentalna frekvencia (f₀): {f0_estimated:.2f} Hz")
 
 # Vykreslovanie 
-
 # Zoznam grafov, ktore chceme prepinat
 graphs = [
     (test_signal, "Vstupny signal"),
@@ -316,10 +316,9 @@ def update_graph(idx):
         # Vertikalny rozostup
         spacing = 0.1  
         # Amplitudove skalovanie
-        scale_factor = 2.0  # 5 pre trubku, 20 pre bowls
+        scale_factor = 2.0  # 5 pre trubku, 20 pre tibetske misky
         # Rovnomerne vizualne rozostupy
         offsets = np.arange(len(selected_indices)) * spacing
-        # Vyplname po okraj
         min_fill = offsets[0] - spacing  
 
         for idx, i in enumerate(selected_indices):
@@ -432,7 +431,7 @@ def change_hist_channel(step):
 # Prve zobrazenie grafu
 update_graph(current_graph)
 
-# Tlacidlo "dalsi"
+# Tlacidlo "Dalsi"
 ax_next = plt.axes([0.8, 0.05, 0.1, 0.075])  
 btn_next = Button(ax_next, 'Dalsi')  
 # Funkcia na prepnutie na dalsi graf
@@ -444,7 +443,7 @@ btn_prev = Button(ax_prev, 'Predch.')
 # Funkcia na prepnutie na predchadzajuci graf
 btn_prev.on_clicked(lambda event: update_graph(current_graph - 1))  
 
-# Tlacidlo "dalsi kanal pre histogram"
+# Tlacidlo "Dalsi kanal pre histogram"
 ax_next_hist = plt.axes([0.45, 0.05, 0.1, 0.075])
 btn_next_hist = Button(ax_next_hist, 'Kanal +')
 btn_next_hist.on_clicked(lambda event: change_hist_channel(1))
