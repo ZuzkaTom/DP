@@ -1,3 +1,5 @@
+print("Program MH: Implementacia Meddis-Hewittovho modelu")
+
 import numpy as np  
 import matplotlib.pyplot as plt  
 import librosa  
