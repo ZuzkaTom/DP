@@ -91,7 +91,7 @@ def gammatone_filterbank_iir(signal, center_freqs, order=4):
 center_freqs = erb_center_frequencies(start_freq=80, end_freq=8000, erb_step=0.25)
 print(f"Pocet filtrov: {len(center_freqs)}")
 
-# Aplikacia IIR gammatonoveho filterbanku – kazdy filter simuluje jeden kanal bazilarnej membrany
+# Aplikacia IIR gammatonoveho filterbanku - kazdy filter simuluje jeden kanal bazilarnej membrany
 gammatone_signals = gammatone_filterbank_iir(filtered_signal, center_freqs)
 
 # Mechanicko-nervova transdukcia
@@ -223,35 +223,35 @@ for k, p_t in enumerate(tqdm(p_spike_values, desc="Distribucia casovych interval
     for i, delta in enumerate(tqdm(delta_t_values, desc=f"δt pre kanal {k+1}", leave=False)):  
         # Vyjadrime δt ako pocet vzoriek
         delay_samples = int(delta / dt)     
-        # Urcime, kolko vzoriek T mame v intervale 0–7.5 ms    
+        # Urcime, kolko vzoriek T mame v intervale 0-7.5 ms    
         max_T = int(acf_window / dt)            
 
         # Cyklus cez vsetky casy T
         for T in range(1, max_T): 
-            # Berieme len tie t, pri ktorych vieme bezpecne siahnut do minulosti az o T+δt, teda:
+            # Berieme len tie t, pri ktorych vieme bezpecne siahnut do minulosti az o T+deltat, teda:
             t_idx = np.arange(delay_samples + T, len(p_t))
 
-            # Vypocitame indexy pre p(t−T)
+            # Vypocitame indexy pre p(t-T)
             t_minus_T = t_idx - T
 
-            # Vypocitame indexy pre p(t−T−δt)
+            # Vypocitame indexy pre p(t-T-deltat)
             t_minus_T_minus_delta = t_idx - T - delay_samples
 
             # Zabezpecime, ze indexy neprecitaju data mimo pola
             valid = (t_minus_T >= 0) & (t_minus_T_minus_delta >= 0)
 
             if np.any(valid):  # Pokracujeme len vtedy, ked mame aspon jeden platny index
-                # Extrahujeme hodnoty pravdepodobnosti spiku v case t−T a t−T−δt
-                pit_T = p_t[t_minus_T[valid]]              # p(t−T)
-                pit_T_dt = p_t[t_minus_T_minus_delta[valid]]  # p(t−T−δt)
+                # Extrahujeme hodnoty pravdepodobnosti spiku v case t-T a t-T-deltat
+                pit_T = p_t[t_minus_T[valid]]              # p(t-T)
+                pit_T_dt = p_t[t_minus_T_minus_delta[valid]]  # p(t-T-deltat)
 
-                # Vypocitame vahu podla vzdialenosti T – Lickliderov exponencialny utlm
-                weights = np.exp(-T * dt / time_constant)  # e^(−T/tau)
+                # Vypocitame vahu podla vzdialenosti T - Lickliderov exponencialny utlm
+                weights = np.exp(-T * dt / time_constant)  # e^(-T/tau)
 
-                # Vypocitame prispevok do histogramu pre dany δt:
+                # Vypocitame prispevok do histogramu pre dany deltat:
                 histogram[i] += np.sum(pit_T * pit_T_dt * weights)
 
-    # Po dokonceni cyklu cez δt ulozime histogram pre aktualny kanal
+    # Po dokonceni cyklu cez deltat ulozime histogram pre aktualny kanal
     histograms.append(histogram)
 
 # Vypocet SACF ako priemer histogramov
