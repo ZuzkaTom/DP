@@ -280,7 +280,7 @@ graphs = [
     (filtered_signal, "Filtrovany signal"),
     (gammatone_signals, "Vystup gamatonovej banky filtrov"),
     (cleft_values, "Mnozstvo neurotransmitera c(t) v synaptickej strbine"),
-    (q_values, "Mnozstvo neurotransmitera q(t) v zasobnom priestore volneho neurotransmitera"),
+    (q_values, "Mnozstvo neurotransmitera q(t) v zasobniku volneho neurotransmitera"),
     (p_spike_values, "Pravdepodobnost spiku p_spike(t)"),
     (histograms, "Autokorelacne histogramy"),
     (sacf, "Suhrnny autokorelacny histogram (SACF)")
